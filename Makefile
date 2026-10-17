@@ -1,7 +1,7 @@
-CC      	:= gcc
-CFLAGS  	:= -pedantic-errors -Wall -Wextra -g -O0 -std=c11
+CC      	:= clang
+CFLAGS      := -pedantic-errors -Wall -Wextra -g -O0 -std=c11 -F/Library/Frameworks -I/Library/Frameworks/SDL3.framework/Headers
 LDFLAGS 	:= -F/Library/Frameworks -Wl,-rpath,/Library/Frameworks
-LIBFLAGS 	:= -framework SDL2
+LIBFLAGS 	:= -framework SDL3
 
 SRC_DIR   := src
 BUILD_DIR := build
@@ -17,7 +17,7 @@ $(TARGET): $(OBJ)
 	$(CC) $(OBJ) -o $@ $(LDFLAGS) $(LIBFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -I$(SRC_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
