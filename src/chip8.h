@@ -14,4 +14,6 @@ typedef struct Chip8_t {
 } Chip8_t ;
 
 
-Chip8_t initChip8();
+Chip8_t initChip8(void);
+
+void chip8Cycle(Chip8_t * chip8);

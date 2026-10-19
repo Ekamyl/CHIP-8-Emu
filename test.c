@@ -2,19 +2,46 @@
 #include <stdlib.h>
 
 
-int main() {
-    uint8_t * var = malloc(sizeof(uint8_t) * 1) ;
-
-    uint8_t * addr = var ; 
-
-    printf("valeur de 'addr' : %p\n", addr);
-
+typedef struct Chip8_t {
+    uint8_t RAM[4096];
+    uint8_t registers[16];
+    uint16_t I;
+    uint8_t delay;
+    uint8_t sound;
+    uint16_t PC;
+    uint8_t SP;
     uint16_t stack[16];
-    uint8_t * p = stack ;
+} Chip8_t ;
 
-    printf("%d\n", *p);
+int main(int argv, char * argc[]) {
+    
+    Chip8_t chip8; 
+    chip8.RAM[0] = 0x0C;
+    chip8.RAM[1] = 0x0B;
+    chip8.PC = 0;
 
-    printf("taille de pointeur de uint16_t : %lu\ntaille de pointeur de uint8_t : %lu\n", sizeof(uint16_t *), sizeof(uint8_t *));
+    uint16_t opcode = chip8.RAM[chip8.PC++] << 8 | chip8.RAM[chip8.PC++];
+
+    printf("opcode : 0x%x\n", opcode >> 8);
+
+    // decode  
+    switch (opcode >> 12) {
+        case 0x0 : 
+            goto print;
+            break;
+    }
+
+    printf("Je suis avant le goto\n");
+
+    // execute 
+    print:
+        printf("je suis le goto print\n");
+        goto end;
+
+    printf("je suis apres le goto\n");
+
+    end :
+        return 0;
 
     return 0;
 } 

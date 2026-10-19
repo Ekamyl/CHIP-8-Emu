@@ -53,3 +53,12 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# test files
+test*
+
+# build files 
+build/*
+
+# VS Code config files 
+.vscode/*
