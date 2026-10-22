@@ -1,5 +1,5 @@
 CC      	:= clang
-CFLAGS      := -pedantic-errors -Wall -Wextra -g -O0 -std=c11 -F/Library/Frameworks -I/Library/Frameworks/SDL3.framework/Headers
+CFLAGS      := -pedantic-errors -Wno-gnu-label-as-value -Wall -Wextra -g -O0 -std=c23 -F/Library/Frameworks -I/Library/Frameworks/SDL3.framework/Headers
 LDFLAGS 	:= -F/Library/Frameworks -Wl,-rpath,/Library/Frameworks
 LIBFLAGS 	:= -framework SDL3
 
