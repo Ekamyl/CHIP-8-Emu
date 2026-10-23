@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
         
         // boucle d'evenement 
         handleEvent(&event);
-        // runChip8(&chip8, 10);
+        runChip8(&chip8, 10);
         renderDisplay(display);
         fps++;
 
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
             last_time_fps = current_time_fps;
         }
 
-    } while (event.type != SDL_EVENT_QUIT) ;
+    } while (event.type != SDL_EVENT_QUIT && chip8.running == TRUE) ;
 
     destroyDisplay(&display);
     SDL_Quit();

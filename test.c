@@ -24,24 +24,28 @@ int main(int argv, char * argc[]) {
 
     printf("opcode : 0x%x\n", opcode >> 8);
 
-    // decode  
-    switch (opcode >> 12) {
-        case 0x0 : 
-            goto print;
-            break;
+    FILE * f = fopen("roms/2-ibm-logo.ch8", "rb");
+    if (f == NULL) {
+        fprintf(stderr, "Error while opening roms/2-ibm-logo.ch8 file");
+        return 1;
     }
 
-    printf("Je suis avant le goto\n");
+    uint8_t tab[4];
+    size_t length = sizeof(tab[0]);
+    size_t num = sizeof(tab) / length;
+    fread(tab, length, num, f);
 
-    // execute 
-    print:
-        printf("je suis le goto print\n");
-        goto end;
+    for(int i = 0; i < 4; i++) {
+        printf("%d ", tab[i]);
+    }
+    printf("\n");
 
-    printf("je suis apres le goto\n");
+    // afficher le nombre de bytes 
+    fseek(f, 0, SEEK_END);
+    long nbytes = ftell(f);
+    printf("n bytes : %ld\n", nbytes);
 
-    end :
-        return 0;
+    fclose(f);
 
     return 0;
 } 

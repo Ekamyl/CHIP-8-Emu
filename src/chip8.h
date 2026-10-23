@@ -4,7 +4,14 @@
 
 #define TRUE 1
 #define FALSE 0
-#define DISPATCH() {if(chip8->running == FALSE) return; if(cycles == 0) return; goto * lookUp_table[0];}
+#define DISPATCH() {\
+    if(chip8->running == FALSE) return;\
+    if(cycles == 0) return;\
+    opcode = chip8->RAM[chip8->PC] << 8 | chip8->RAM[chip8->PC + 1];\
+    chip8->PC += 2;\
+    cycles--;\
+    goto * lookUp_table[opcode >> 12];\
+}
 
 typedef struct Chip8_t {
     uint8_t RAM[4096];
