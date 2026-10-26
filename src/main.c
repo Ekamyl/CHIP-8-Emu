@@ -8,7 +8,7 @@
 int main(int argc, char *argv[])
 {
     
-    Display_t * display = createDisplay(64 * 20, 32 * 20, "Chip8-Emu") ;
+    Display_t * display = createDisplay(DISPLAY_WIDTH * WINDOW_SCALE, DISPLAY_HEIGHT * WINDOW_SCALE, "Chip8-Emu") ;
     SDL_Event event ;
     Chip8_t chip8 = initChip8();
 
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         // boucle d'evenement 
         handleEvent(&event);
         runChip8(&chip8, 10);
-        renderDisplay(display);
+        renderDisplay(display, &chip8.frame_buffer);
         fps++;
 
         

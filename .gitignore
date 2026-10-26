@@ -62,3 +62,6 @@ build/*
 
 # VS Code config files 
 .vscode/*
+
+# test files 
+test*

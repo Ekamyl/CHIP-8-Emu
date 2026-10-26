@@ -4,17 +4,17 @@
 
 #define TRUE 1
 #define FALSE 0
-#define DISPATCH() {\
-    if(chip8->running == FALSE) return;\
-    if(cycles == 0) return;\
-    opcode = chip8->RAM[chip8->PC] << 8 | chip8->RAM[chip8->PC + 1];\
-    chip8->PC += 2;\
-    cycles--;\
-    goto * lookUp_table[opcode >> 12];\
-}
+#define RAM_SIZE 0xFFF
+
+
+typedef struct FrameBuffer_t {
+    uint64_t buffer[32];
+    uint8_t modified;
+} FrameBuffer_t;
 
 typedef struct Chip8_t {
-    uint8_t RAM[4096];
+    FrameBuffer_t frame_buffer;
+    uint8_t RAM[RAM_SIZE];
     uint8_t registers[16];
     uint16_t I;
     uint8_t delay;

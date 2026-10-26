@@ -1,0 +1,9 @@
+METHODE DE DRAW :
+- Pour les different dessin sur le renderer ou autre construire un genre de file d'attente. 
+Au lieu de faire appel directement aux fonctions de dessins dans le programme, plutot 
+faire une interface dans les fichiers platform_SDL* pour faire la demande de dessins. 
+Chaque demande sera stocke dans une liste FIFO qui sera ensuite reutiliser au moment du
+rendu pour executer chaque requete dans l'ordre du premier demander premier execute. 
+PS : tres bonne idee pour un jeu 2D mais completement inutile pour ce projet mdr 
+
+vaut mieux utiliser un tableau comme cela : uint64_t display[32] ou uint8_t display[64 * 32]

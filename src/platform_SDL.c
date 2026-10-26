@@ -32,12 +32,34 @@ void destroyDisplay(Display_t ** display) {
 }
 
 
-void renderDisplay(Display_t * display) {
+void renderDisplay(Display_t * display, FrameBuffer_t * buffer) {
 
-    SDL_SetRenderDrawColor(display->renderer, 0, 150, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(display->renderer);
-    SDL_RenderPresent(display->renderer);
-    
+    if (buffer->modified) {
+
+        buffer->modified = 0;
+
+        SDL_SetRenderDrawColor(display->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(display->renderer);
+
+        SDL_FRect rects[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+        uint16_t count = 0;
+
+        for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+            for (int x = 0; x < DISPLAY_WIDTH; x++) {
+                if (buffer->buffer[y] >> (63 - x) & 0x1) {
+                    rects[count++] = (SDL_FRect){x * WINDOW_SCALE, y * WINDOW_SCALE, WINDOW_SCALE, WINDOW_SCALE};
+                }
+            }
+        }
+
+        if (count) {
+            SDL_SetRenderDrawColor(display->renderer, 170, 170, 170, SDL_ALPHA_OPAQUE);
+            SDL_RenderFillRects(display->renderer, rects, count);
+        }
+        SDL_RenderPresent(display->renderer);
+        
+    }
+
 }
 
 
