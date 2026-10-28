@@ -7,9 +7,153 @@
     if(chip8->running == FALSE) return;\
     if(cycles == 0) return;\
     opcode = chip8->RAM[chip8->PC] << 8 | chip8->RAM[chip8->PC + 1];\
-    chip8->PC += 2;\
+    /*chip8->PC += 2;*/\
     cycles--;\
+    printf("goto opcode 0x%04x\nPC : %d\n", opcode, chip8->PC);\
     goto * lookUp_table[opcode >> 12];\
+}
+
+Chip8_t initChip8(void);
+static inline void readRam(Chip8_t * chip8);
+static inline uint16_t getAddr(uint16_t opcode);
+static inline uint8_t getNibble(uint16_t opcode);
+static inline uint8_t getX(uint16_t opcode);
+static inline uint8_t getY(uint16_t opcode);
+static inline uint8_t getByte(uint16_t opcode);
+
+
+void runChip8(Chip8_t * chip8, int cycles) {
+
+    // update delay and sound timers 
+    if (chip8->delay > 0) chip8->delay--;
+    if (chip8->sound > 0) chip8->sound--;
+
+    const void * lookUp_table[16] = {
+        &&op_0xxx, &&op_1xxx, &&op_2xxx, &&op_3xxx,
+        &&op_4xxx, &&op_5xxx, &&op_6xxx, &&op_7xxx,
+        &&op_8xxx, &&op_9xxx, &&op_Axxx, &&op_Bxxx,
+        &&op_Cxxx, &&op_Dxxx, &&op_Exxx, &&op_Fxxx
+    };
+
+    uint16_t opcode ;
+
+    DISPATCH();
+
+    op_0xxx:
+        if (opcode == 0x00E0) {
+            for (int i = 0; i < 32; i++) {
+                chip8->frame_buffer.buffer[i] = 0x0;
+            }
+        }
+        else {
+            chip8->PC = chip8->stack[chip8->SP];
+            chip8->SP--;
+        }
+        DISPATCH();
+
+    op_1xxx:
+        chip8->PC = getAddr(opcode);
+        DISPATCH();
+    
+    op_2xxx:
+        if (chip8->SP != 0) chip8->SP++;
+        chip8->stack[chip8->SP] = chip8->PC;
+        chip8->PC = getAddr(opcode);
+        DISPATCH();
+
+    op_3xxx:
+        if (chip8->registers[getX(opcode)] == getByte(opcode)) chip8->PC += 2;
+        DISPATCH();
+
+    op_4xxx:
+        if (chip8->registers[getX(opcode)] != getByte(opcode)) chip8->PC += 2;
+        DISPATCH();
+
+    op_5xxx:
+        if (chip8->registers[getX(opcode)] == chip8->registers[getY(opcode)]) chip8->PC += 2;
+        DISPATCH();
+
+    op_6xxx:
+        chip8->registers[getX(opcode)] = getByte(opcode);
+        DISPATCH();
+
+    op_7xxx:
+        chip8->registers[getX(opcode)] += getByte(opcode);
+        DISPATCH();
+
+    op_8xxx:
+        switch(getNibble(opcode)) {
+            case 0 : 
+                chip8->registers[getX(opcode)] = chip8->registers[getY(opcode)];
+                break;
+            case 1 :
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] | chip8->registers[getY(opcode)];
+                break;
+            case 2 : 
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] & chip8->registers[getY(opcode)];
+                break;
+            case 3 : 
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] ^ chip8->registers[getY(opcode)];
+                break;
+            case 4 : 
+                {
+                uint16_t result = chip8->registers[getX(opcode)] + chip8->registers[getY(opcode)];
+                chip8->registers[getX(opcode)] = getByte(result);
+                chip8->registers[0xF] = result >> 8; 
+                }
+                break;
+            case 5 :
+                if (chip8->registers[getX(opcode)] > chip8->registers[getY(opcode)]) chip8->registers[0xF] = 1;
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] - chip8->registers[getY(opcode)];
+                break;
+            case 6 : 
+                if (chip8->registers[getX(opcode)] & 0x1) chip8->registers[0xF] = 1;
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] >> 1;
+                break;
+            case 7 : 
+                if (chip8->registers[getY(opcode)] > chip8->registers[getX(opcode)]) chip8->registers[0xF] = 1;
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] - chip8->registers[getY(opcode)];
+                break;
+            case 0xe :
+                if (chip8->registers[getX(opcode)] & 0x8) chip8->registers[0xF] = 1;
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] << 1; 
+        }
+        DISPATCH();
+
+    op_9xxx:
+        if (chip8->registers[getX(opcode)] != chip8->registers[getY(opcode)]) chip8->PC += 2;
+        DISPATCH();
+
+    op_Axxx:
+        chip8->I = getAddr(opcode);
+        DISPATCH();
+
+    op_Bxxx:
+        chip8->PC = getAddr(opcode) + chip8->registers[0x0];
+        DISPATCH();
+
+    op_Cxxx:
+        chip8->registers[getX(opcode)] = (rand() % 256) & getByte(opcode);
+        DISPATCH();
+
+    op_Dxxx:
+        if (getNibble(opcode) > 15) {
+            fprintf(stderr, "Error : Sprite size must be beetween 1 and 15, %d here\n", getNibble(opcode));
+            exit(EXIT_FAILURE);
+        }
+        for (int i = 0; i < getNibble(opcode); i++) {
+            uint8_t byte = chip8->RAM[chip8->I + i];
+            chip8->frame_buffer.buffer[getY(opcode)] = 
+        }
+        DISPATCH();
+
+    op_Exxx:
+        DISPATCH();
+
+    op_Fxxx:
+        DISPATCH();
+
+
 }
 
 
@@ -25,13 +169,6 @@ Chip8_t initChip8(void) {
         .SP = 0,
         .running = TRUE
     };
-
-    for (int i = 0; i < 32; i++) {
-        if (i % 2 == 0)
-            chip8.frame_buffer.buffer[i] = 0xAAAAAAAAAAAAAAAA;
-        else 
-            chip8.frame_buffer.buffer[i] = 0xAAAAAAAAAAAAAAAA >> 0x1;
-    }
     
     // open rom file 
     FILE * rom;
@@ -90,67 +227,19 @@ static inline void readRam(Chip8_t * chip8) {
 }
 
 
-void runChip8(Chip8_t * chip8, int cycles) {
-
-    const void * lookUp_table[16] = {
-        &&op_0xxx, &&op_1xxx, &&op_2xxx, &&op_3xxx,
-        &&op_4xxx, &&op_5xxx, &&op_6xxx, &&op_7xxx,
-        &&op_8xxx, &&op_9xxx, &&op_Axxx, &&op_Bxxx,
-        &&op_Cxxx, &&op_Dxxx, &&op_Exxx, &&op_Fxxx
-    };
-
-    uint64_t opcode ;
-
-    DISPATCH();
-
-    op_0xxx:
-        // readRam(chip8);
-        DISPATCH();
-
-    op_1xxx:
-
-    
-    op_2xxx:
-
-
-    op_3xxx:
-
-
-    op_4xxx:
-
-
-    op_5xxx:
-
-
-    op_6xxx:
-
-
-    op_7xxx:
-
-
-    op_8xxx:
-
-
-    op_Axxx:
-
-
-    op_9xxx:
-
-
-    op_Bxxx:
-
-
-    op_Cxxx:
-
-
-    op_Dxxx:
-
-
-    op_Exxx:
-
-
-    op_Fxxx:
-
-
-
+static inline uint16_t getAddr(uint16_t opcode) {
+    return opcode & 0x0FFF;
 }
+static inline uint8_t getNibble(uint16_t opcode) {
+    return opcode & 0x000F;
+}
+static inline uint8_t getX(uint16_t opcode) {
+    return (opcode >> 8) & 0x000F;
+}
+static inline uint8_t getY(uint16_t opcode) {
+    return (opcode >> 4) & 0x000F;
+}
+static inline uint8_t getByte(uint16_t opcode) {
+    return opcode & 0x00FF;
+}
+

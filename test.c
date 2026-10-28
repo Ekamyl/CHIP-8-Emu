@@ -13,6 +13,22 @@ typedef struct Chip8_t {
     uint16_t stack[16];
 } Chip8_t ;
 
+static inline uint16_t getAddr(uint16_t opcode) {
+    return opcode & 0x0FFF;
+}
+static inline uint8_t getNibble(uint16_t opcode) {
+    return opcode & 0x000F;
+}
+static inline uint8_t getX(uint16_t opcode) {
+    return (opcode >> 8) & 0x000F;
+}
+static inline uint8_t getY(uint16_t opcode) {
+    return (opcode >> 4) & 0x000F;
+}
+static inline uint8_t getByte(uint16_t opcode) {
+    return opcode & 0x00FF;
+}
+
 int main(int argv, char * argc[]) {
     
     Chip8_t chip8; 
@@ -46,6 +62,14 @@ int main(int argv, char * argc[]) {
     printf("n bytes : %ld\n", nbytes);
 
     fclose(f);
+
+
+    // test getAddr()
+    opcode = 0x16E5;
+    printf("addr de 0x16E5 : 0x%x == %d\n", getAddr(opcode), getAddr(opcode));
+    printf("nibble de 0x16E5 : 0x%x == %d\n", getNibble(opcode), getNibble(opcode));
+    printf("x de 0x16E5 : 0x%x == %d\n", getX(opcode), getX(opcode));
+    printf("y de 0x16E5 : 0x%x == %d\n", getY(opcode), getY(opcode));
 
     return 0;
 } 

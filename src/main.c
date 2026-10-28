@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include "platform_SDL.h"                           
 #include "chip8.h"
 
@@ -21,6 +22,9 @@ int main(int argc, char *argv[])
     uint64_t last_time_fps = SDL_GetTicks();
     uint64_t current_time_fps;
 
+    // setup random numbers 
+    srand(time(NULL));
+
     do {
         
         // boucle d'evenement 
@@ -30,14 +34,6 @@ int main(int argc, char *argv[])
         fps++;
 
         
-        // fps limiter 
-        current_time = SDL_GetTicks();
-        if ((current_time - last_time) < 16) {
-            SDL_Delay(MS_PER_FRAME - (current_time - last_time));
-        }
-        last_time = SDL_GetTicks();
-
-
         // fps counter
         current_time_fps = SDL_GetTicks();
         if ((current_time_fps - last_time_fps) >= 1000) {
@@ -45,6 +41,14 @@ int main(int argc, char *argv[])
             fps = 0;
             last_time_fps = current_time_fps;
         }
+
+
+        // fps limiter 
+        current_time = SDL_GetTicks();
+        if ((current_time - last_time) < 16) {
+            SDL_Delay(MS_PER_FRAME - (current_time - last_time));
+        }
+        last_time = SDL_GetTicks();
 
     } while (event.type != SDL_EVENT_QUIT && chip8.running == TRUE) ;
 
