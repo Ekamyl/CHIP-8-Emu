@@ -143,7 +143,9 @@ void runChip8(Chip8_t * chip8, int cycles) {
         }
         for (int i = 0; i < getNibble(opcode); i++) {
             uint8_t byte = chip8->RAM[chip8->I + i];
-            chip8->frame_buffer.buffer[getY(opcode)] = 
+            uint8_t target = chip8->frame_buffer.buffer[getY(opcode)] >> (63 - getX(opcode) - 7);
+            if ((target & byte) != 0) chip8->registers[0xF] = 1;
+            chip8->frame_buffer.buffer[getY(opcode)] = chip8->frame_buffer.buffer[getY(opcode)] ^ (uint64_t)byte << (63 - getX(opcode) + 7); 
         }
         DISPATCH();
 
