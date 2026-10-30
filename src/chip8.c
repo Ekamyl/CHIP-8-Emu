@@ -137,15 +137,35 @@ void runChip8(Chip8_t * chip8, int cycles) {
         DISPATCH();
 
     op_Dxxx:
-        if (getNibble(opcode) > 15) {
+        uint8_t nibble = getNibble(opcode);
+        if (nibble > 15) {
             fprintf(stderr, "Error : Sprite size must be beetween 1 and 15, %d here\n", getNibble(opcode));
             exit(EXIT_FAILURE);
         }
-        for (int i = 0; i < getNibble(opcode); i++) {
+        chip8->registers[0xF] = 0; 
+        for (int i = 0; i < nibble; i++) {
             uint8_t byte = chip8->RAM[chip8->I + i];
-            uint8_t target = chip8->frame_buffer.buffer[getY(opcode)] >> (63 - getX(opcode) - 7);
-            if ((target & byte) != 0) chip8->registers[0xF] = 1;
-            chip8->frame_buffer.buffer[getY(opcode)] = chip8->frame_buffer.buffer[getY(opcode)] ^ (uint64_t)byte << (63 - getX(opcode) + 7); 
+            int8_t shift = 63 - getX(opcode) - 7;
+            if (shift < 0) {
+                shift *= -1;
+                uint8_t target_1 = (uint8_t)chip8->frame_buffer.buffer[getY(opcode) + i];
+                if ((target_1 & (byte >> shift)) != 0) {
+                    chip8->registers[0xF] = 1;
+                }
+                else {
+                    uint8_t target_2 = chip8->frame_buffer.buffer[getY(opcode) + i] >> (64 - shift);
+                    if ((target_2 & byte) != 0) chip8->registers[0xF] = 1;
+                }
+
+                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ (uint64_t)byte >> shift;
+                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ (uint64_t)byte << (64 - shift);
+            } 
+            else {
+                uint8_t target = chip8->frame_buffer.buffer[getY(opcode) + i] >> shift;
+                if ((target & byte) != 0) chip8->registers[0xF] = 1;
+
+                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ ((uint64_t)byte << shift);
+            }
         }
         DISPATCH();
 

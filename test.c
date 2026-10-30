@@ -29,6 +29,14 @@ static inline uint8_t getByte(uint16_t opcode) {
     return opcode & 0x00FF;
 }
 
+void print_bin(uint64_t v, int nbits) {
+    for (int i = nbits - 1; i >= 0; i--) {
+        putchar('0' + ((v >> i) & 1));
+        if (i % 8 == 0 && i) putchar(' ');
+    }
+    puts("");
+}
+
 int main(int argv, char * argc[]) {
     
     Chip8_t chip8; 
@@ -70,6 +78,33 @@ int main(int argv, char * argc[]) {
     printf("nibble de 0x16E5 : 0x%x == %d\n", getNibble(opcode), getNibble(opcode));
     printf("x de 0x16E5 : 0x%x == %d\n", getX(opcode), getX(opcode));
     printf("y de 0x16E5 : 0x%x == %d\n", getY(opcode), getY(opcode));
+
+    printf("|------------------------------\n");
+    uint64_t v = 0xFFFFFFFFFFFFFFFF;
+    uint8_t a = (uint8_t)v >> 2 << 2;
+    print_bin(a, 8);
+    uint8_t val_max = 0b11111111;
+    uint8_t val_test = (uint8_t)v;
+    printf("max = %d, test = %d\n", val_max, val_test);
+
+
+    printf("|------------------------------\n");
+    uint16_t buffer[8] = {0};
+    buffer[0] =  0b0010011011000000; 
+    uint8_t byte = 0b10101010;
+    uint8_t shift = 15 - 2 - 7;
+    print_bin(buffer[0], 16);
+    buffer[0] = buffer[0] ^ ((uint16_t)byte << shift);
+    print_bin(buffer[0], 16);
+
+    printf("|------------------------------\n");
+    buffer[1] = 0b1010000011111111;
+    print_bin(buffer[1], 16);
+    byte = buffer[1] >> (16 - 3);
+    printf("byte = ");
+    print_bin(byte, 8);
+    buffer[1] = (uint16_t)byte;
+    print_bin(buffer[1], 16);
 
     return 0;
 } 
