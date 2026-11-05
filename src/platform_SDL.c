@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include "platform_SDL.h"
+#include "chip8.h"
 
-
+/* Create the window and renderer used to display the CHIP-8 screen. */
 Display_t * createDisplay(int width, int height, char * title) {
     
+    // Allocate memory for the SDL display structure.
     Display_t * display = malloc(1 * sizeof(Display_t)) ;
     display->width = width ;
     display->height = height ;
@@ -22,6 +24,7 @@ Display_t * createDisplay(int width, int height, char * title) {
 }
 
 
+/* Free the display resources and close the SDL window. */
 void destroyDisplay(Display_t ** display) {
 
     SDL_DestroyRenderer((*display)->renderer);
@@ -32,12 +35,14 @@ void destroyDisplay(Display_t ** display) {
 }
 
 
+/* Draw the frame buffer to the screen only when it has changed. */
 void renderDisplay(Display_t * display, FrameBuffer_t * buffer) {
 
     if (buffer->modified) {
 
         buffer->modified = 0;
 
+        // Clear the screen before drawing the active pixels.
         SDL_SetRenderDrawColor(display->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(display->renderer);
 
@@ -63,8 +68,10 @@ void renderDisplay(Display_t * display, FrameBuffer_t * buffer) {
 }
 
 
-void handleEvent(SDL_Event * event) {
+/* Poll the current SDL event queue for keyboard and window events. */
+void handleEvent(SDL_Event * event, Chip8_t * chip8) {
 
-    SDL_PollEvent(event); 
+    SDL_PollEvent(event);
+    const bool * keys = SDL_GetKeyboardState(NULL);
 
 }

@@ -20,4 +20,4 @@ Display_t * createDisplay(int width, int height, char * title);
 void destroyDisplay(Display_t ** display);
 
 void renderDisplay(Display_t * display, FrameBuffer_t * buffer);
-void handleEvent(SDL_Event * event);
+void handleEvent(SDL_Event * event, Chip8_t * chip8);

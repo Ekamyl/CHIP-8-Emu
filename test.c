@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* This small test file checks a few CHIP-8 helper functions and bit operations. */
 
 typedef struct Chip8_t {
     uint8_t RAM[4096];
@@ -13,6 +14,7 @@ typedef struct Chip8_t {
     uint16_t stack[16];
 } Chip8_t ;
 
+/* Helper functions used to decode CHIP-8 opcodes. */
 static inline uint16_t getAddr(uint16_t opcode) {
     return opcode & 0x0FFF;
 }
@@ -29,6 +31,7 @@ static inline uint8_t getByte(uint16_t opcode) {
     return opcode & 0x00FF;
 }
 
+/* Print a value in binary for quick debugging. */
 void print_bin(uint64_t v, int nbits) {
     for (int i = nbits - 1; i >= 0; i--) {
         putchar('0' + ((v >> i) & 1));
@@ -37,8 +40,10 @@ void print_bin(uint64_t v, int nbits) {
     puts("");
 }
 
+/* Entry point for the quick test program. */
 int main(int argv, char * argc[]) {
     
+    // Build a simple CHIP-8 memory state to test opcode decoding.
     Chip8_t chip8; 
     chip8.RAM[0] = 0x0C;
     chip8.RAM[1] = 0x0B;
@@ -48,6 +53,7 @@ int main(int argv, char * argc[]) {
 
     printf("opcode : 0x%x\n", opcode >> 8);
 
+    // Open the ROM file so we can read a few bytes from it.
     FILE * f = fopen("roms/2-ibm-logo.ch8", "rb");
     if (f == NULL) {
         fprintf(stderr, "Error while opening roms/2-ibm-logo.ch8 file");
@@ -64,7 +70,7 @@ int main(int argv, char * argc[]) {
     }
     printf("\n");
 
-    // afficher le nombre de bytes 
+    // Show how many bytes are in the ROM file.
     fseek(f, 0, SEEK_END);
     long nbytes = ftell(f);
     printf("n bytes : %ld\n", nbytes);
@@ -72,7 +78,7 @@ int main(int argv, char * argc[]) {
     fclose(f);
 
 
-    // test getAddr()
+    // Test the helper functions that decode opcode fields.
     opcode = 0x16E5;
     printf("addr de 0x16E5 : 0x%x == %d\n", getAddr(opcode), getAddr(opcode));
     printf("nibble de 0x16E5 : 0x%x == %d\n", getNibble(opcode), getNibble(opcode));

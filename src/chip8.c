@@ -9,9 +9,10 @@
     opcode = chip8->RAM[chip8->PC] << 8 | chip8->RAM[chip8->PC + 1];\
     /*chip8->PC += 2;*/\
     cycles--;\
-    printf("goto opcode 0x%04x\nPC : %d\n", opcode, chip8->PC);\
     goto * lookUp_table[opcode >> 12];\
 }
+
+/* This file contains the CHIP-8 CPU logic and the ROM loader. */
 
 Chip8_t initChip8(void);
 static inline void readRam(Chip8_t * chip8);
@@ -22,9 +23,10 @@ static inline uint8_t getY(uint16_t opcode);
 static inline uint8_t getByte(uint16_t opcode);
 
 
+/* Run one CPU step for the CHIP-8 emulator. */
 void runChip8(Chip8_t * chip8, int cycles) {
 
-    // update delay and sound timers 
+    // Decrease the delay and sound timers every cycle.
     if (chip8->delay > 0) chip8->delay--;
     if (chip8->sound > 0) chip8->sound--;
 
@@ -37,6 +39,7 @@ void runChip8(Chip8_t * chip8, int cycles) {
 
     uint16_t opcode ;
 
+    /* Read the next opcode and jump to the matching instruction handler. */
     DISPATCH();
 
     op_0xxx:
@@ -103,20 +106,33 @@ void runChip8(Chip8_t * chip8, int cycles) {
                 }
                 break;
             case 5 :
-                if (chip8->registers[getX(opcode)] > chip8->registers[getY(opcode)]) chip8->registers[0xF] = 1;
+                if (chip8->registers[getX(opcode)] > chip8->registers[getY(opcode)]) 
+                    chip8->registers[0xF] = 1;
+                else 
+                    chip8->registers[0xF] = 0;
                 chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] - chip8->registers[getY(opcode)];
                 break;
             case 6 : 
-                if (chip8->registers[getX(opcode)] & 0x1) chip8->registers[0xF] = 1;
+                if (chip8->registers[getX(opcode)] & 0x1) 
+                    chip8->registers[0xF] = 1;
+                else 
+                    chip8->registers[0xF] = 0;
                 chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] >> 1;
                 break;
             case 7 : 
-                if (chip8->registers[getY(opcode)] > chip8->registers[getX(opcode)]) chip8->registers[0xF] = 1;
+                if (chip8->registers[getY(opcode)] > chip8->registers[getX(opcode)]) 
+                    chip8->registers[0xF] = 1;
+                else 
+                    chip8->registers[0xF] = 0;
                 chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] - chip8->registers[getY(opcode)];
                 break;
             case 0xe :
-                if (chip8->registers[getX(opcode)] & 0x8) chip8->registers[0xF] = 1;
-                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] << 1; 
+                if (chip8->registers[getX(opcode)] & 0x8) 
+                    chip8->registers[0xF] = 1;
+                else 
+                    chip8->registers[0xF] = 0;
+                chip8->registers[getX(opcode)] = chip8->registers[getX(opcode)] << 1;
+                break; 
         }
         DISPATCH();
 
@@ -145,26 +161,26 @@ void runChip8(Chip8_t * chip8, int cycles) {
         chip8->registers[0xF] = 0; 
         for (int i = 0; i < nibble; i++) {
             uint8_t byte = chip8->RAM[chip8->I + i];
-            int8_t shift = 63 - getX(opcode) - 7;
+            int8_t shift = 63 - (chip8->registers[getX(opcode)] % 64) - 7;
             if (shift < 0) {
                 shift *= -1;
-                uint8_t target_1 = (uint8_t)chip8->frame_buffer.buffer[getY(opcode) + i];
+                uint8_t target_1 = (uint8_t)chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32];
                 if ((target_1 & (byte >> shift)) != 0) {
                     chip8->registers[0xF] = 1;
                 }
                 else {
-                    uint8_t target_2 = chip8->frame_buffer.buffer[getY(opcode) + i] >> (64 - shift);
+                    uint8_t target_2 = chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] >> (64 - shift);
                     if ((target_2 & byte) != 0) chip8->registers[0xF] = 1;
                 }
 
-                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ (uint64_t)byte >> shift;
-                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ (uint64_t)byte << (64 - shift);
+                chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] = chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] ^ (uint64_t)byte >> shift;
+                chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] = chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] ^ (uint64_t)byte << (64 - shift);
             } 
             else {
-                uint8_t target = chip8->frame_buffer.buffer[getY(opcode) + i] >> shift;
+                uint8_t target = chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 33] >> shift;
                 if ((target & byte) != 0) chip8->registers[0xF] = 1;
 
-                chip8->frame_buffer.buffer[getY(opcode) + i] = chip8->frame_buffer.buffer[getY(opcode) + i] ^ ((uint64_t)byte << shift);
+                chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 33] = chip8->frame_buffer.buffer[chip8->registers[getY(opcode) + i]  % 32] ^ ((uint64_t)byte << shift);
             }
         }
         DISPATCH();
@@ -179,9 +195,10 @@ void runChip8(Chip8_t * chip8, int cycles) {
 }
 
 
+/* Create a new CHIP-8 machine and load the ROM into RAM. */
 Chip8_t initChip8(void) {
 
-    // init attributes base values 
+    // Set the default CPU state before loading the ROM.
     Chip8_t chip8 = {
         .frame_buffer.modified = 1,
         .RAM = {0},
@@ -192,14 +209,14 @@ Chip8_t initChip8(void) {
         .running = TRUE
     };
     
-    // open rom file 
+    // Open the ROM file from the roms folder.
     FILE * rom;
     if ( !(rom = fopen("roms/2-ibm-logo.ch8", "rb")) ) {
         fprintf(stderr, "Error while opening rom file\n");
         exit(EXIT_FAILURE);
     }
 
-    // check the file's size 
+    // Check that the ROM is small enough to fit in CHIP-8 memory.
     fseek(rom, 0, SEEK_END); 
     size_t nbytes = ftell(rom);
 
@@ -209,21 +226,24 @@ Chip8_t initChip8(void) {
         exit(EXIT_FAILURE);
     }
 
-    // writes the rom's bytes into the ram 
+    // Copy the ROM bytes into the RAM starting at address 0x200.
     fseek(rom, 0, SEEK_SET);
     size_t bytes_readed = fread(chip8.RAM + 0x200, sizeof(chip8.RAM[0]), nbytes, rom);
 
-    // check if all bytes have been writed
+    // Make sure the ROM was fully copied before continuing.
     if (nbytes != bytes_readed) {
         printf("Rom's bytes not loaded correctly\n");
         fclose(rom);
         exit(EXIT_FAILURE);
     }
+
+    fclose(rom);
     
     return chip8;
 }
 
 
+/* Print RAM bytes from the ROM for debugging. */
 static inline void readRam(Chip8_t * chip8) {
 
     FILE * rom;
@@ -246,9 +266,12 @@ static inline void readRam(Chip8_t * chip8) {
     }
     printf("\n");
 
+    fclose(rom);
+
 }
 
 
+/* Helper functions to decode the opcode fields. */
 static inline uint16_t getAddr(uint16_t opcode) {
     return opcode & 0x0FFF;
 }
